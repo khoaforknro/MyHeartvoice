@@ -6,31 +6,32 @@
     <title>Gửi Cậu...</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
 
-    
     <script>
-        const MUSIC_LINK = "https://github.com/khoaforknro/tinhto/blob/main/audio_HIEUTHUHAI_download.mp3";
+        // Link nhạc đã cập nhật chuẩn Direct Raw
+        const MUSIC_LINK = "https://raw.githubusercontent.com/khoaforknro/tinhto/refs/heads/main/audio_HIEUTHUHAI_download.mp3";
     </script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Montserrat', sans-serif; }
 
-        #rotate-message { position: fixed; inset: 0; background: #000; color: #ff69b4; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 999; text-align: center; }
+        #rotate-message { position: fixed; inset: 0; background: #000; color: #ff69b4; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 999; text-align: center; padding: 20px; }
         .phone-icon { width: 50px; height: 80px; border: 3px solid #ff69b4; border-radius: 10px; margin-bottom: 20px; animation: rotatePhone 2s infinite ease-in-out; position: relative; }
         .phone-icon::after { content: ''; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); width: 8px; height: 8px; background: #ff69b4; border-radius: 50%; }
         @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50%, 100% { transform: rotate(-90deg); } }
 
-        #main-content { display: none; width: 100%; height: 100%; }
-        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
-        .text-overlay { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 2; background: rgba(0, 0, 0, 0.15); }
+        #main-content { display: none; width: 100%; height: 100%; position: relative; }
+        #matrixCanvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
         
-        .message { color: #fff; font-size: 5rem; font-weight: 900; text-shadow: 0 0 10px #ff1493, 0 0 22px #ff1493; 
-                   transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: scale(1); opacity: 0; text-align: center; max-width: 85%; }
+        .text-overlay { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 2; background: rgba(0, 0, 0, 0.2); }
+        
+        .message { color: #fff; font-size: 5rem; font-weight: 900; text-shadow: 0 0 15px #ff1493, 0 0 30px #ff1493; 
+                   transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: scale(1); opacity: 0; text-align: center; max-width: 85%; will-change: transform, opacity; }
         .message.active { opacity: 1; }
-        .message.shatter { opacity: 0; transform: scale(1.5) rotate(15deg); filter: blur(10px); letter-spacing: 20px; }
+        .message.shatter { opacity: 0; transform: scale(1.6) rotate(10deg); filter: blur(8px); letter-spacing: 25px; }
         
-        .heart { font-size: 7rem; color: #ff1493; text-shadow: 0 0 20px #ff1493, 0 0 40px #ff1493; animation: heartPulse 0.8s infinite ease-in-out; }
-        @keyframes heartPulse { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.25); filter: brightness(1.6); } }
+        .heart { font-size: 7rem; color: #ff1493; text-shadow: 0 0 20px #ff1493, 0 0 40px #ff1493; animation: heartPulse 0.8s infinite ease-in-out; display: inline-block; }
+        @keyframes heartPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
         @media screen and (orientation: landscape) { #rotate-message { display: none; } #main-content { display: block; } }
     </style>
@@ -39,7 +40,7 @@
 
     <div id="rotate-message">
         <div class="phone-icon"></div>
-        <p>Vui lòng xoay ngang thiết bị<br>(Chạm để bắt đầu)</p>
+        <p>Vui lòng xoay ngang thiết bị<br>(Chạm màn hình để bắt đầu)</p>
     </div>
 
     <div id="main-content">
@@ -49,7 +50,7 @@
         </div>
     </div>
 
-    <audio id="bgMusic" loop>
+    <audio id="bgMusic" loop preload="auto">
         <source id="audioSource" type="audio/mpeg">
     </audio>
 
@@ -57,29 +58,43 @@
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
         const audio = document.getElementById('bgMusic');
-        audio.src = MUSIC_LINK;
+        const audioSource = document.getElementById('audioSource');
         
-        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+        audioSource.src = MUSIC_LINK;
+        audio.load();
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        initCanvas();
 
         const letters = "010101XYZ0123456789❤️🌸✨LOVE❤️🌸✨";
-        const fontSize = 15;
-        let drops = Array(Math.floor(canvas.width / fontSize)).fill(1);
+        const fontSize = 16;
+        let columns = Math.floor(window.innerWidth / fontSize);
+        let drops = Array(columns).fill(1);
+
+        window.addEventListener('resize', () => {
+            initCanvas();
+            columns = Math.floor(window.innerWidth / fontSize);
+            drops = Array(columns).fill(1);
+        });
 
         function drawMatrix() {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.font = "bold " + fontSize + "px monospace";
+
             for (let i = 0; i < drops.length; i++) {
                 const text = letters[Math.floor(Math.random() * letters.length)];
-                ctx.fillStyle = (Math.random() > 0.98) ? "#ffffff" : "rgba(255, 20, 147, 0.45)";
+                ctx.fillStyle = (Math.random() > 0.98) ? "#ffffff" : "rgba(255, 20, 147, 0.4)";
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
                 if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
                 drops[i]++;
             }
+            requestAnimationFrame(drawMatrix);
         }
-        setInterval(drawMatrix, 30);
+        requestAnimationFrame(drawMatrix);
 
         const script = [
             { text: "3", duration: 1500 },
@@ -88,7 +103,7 @@
             { text: "Em đồng ý...", duration: 3000 },
             { text: "Làm người yêu", duration: 3000 },
             { text: "Anh nhé?", duration: 3000 },
-            { text: "<div class='heart'>❤️</div><span style='font-size: 3.8rem; display:block; font-weight:900;'>Anh Yêu Em</span>", duration: 6000 }
+            { text: "<div class='heart'>❤️</div><span style='font-size: 3.8rem; display:block; font-weight:900; margin-top:10px;'>Anh Yêu Em</span>", duration: 6000 }
         ];
 
         const textDisplay = document.getElementById('text-display');
@@ -114,7 +129,7 @@
         function startExperience() {
             if (!started && window.innerWidth > window.innerHeight) {
                 started = true;
-                audio.play().catch(e => console.log("Đợi tương tác..."));
+                audio.play().catch(e => console.log("Đợi người dùng tương tác..."));
                 runScript();
                 document.removeEventListener('click', startExperience);
                 document.removeEventListener('touchstart', startExperience);
