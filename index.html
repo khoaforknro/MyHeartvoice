@@ -4,95 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gửi Cậu...</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
-
-    <script>
-        const MUSIC_LINK = "https://raw.githubusercontent.com/khoaforknro/tinhto/refs/heads/main/audio_HIEUTHUHAI_download.mp3";
-    </script>
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Montserrat', sans-serif; }
+        body, html { width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
 
-        #rotate-message { position: fixed; inset: 0; background: #000; color: #ff69b4; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 999; }
-        #main-content { display: none; width: 100%; height: 100%; }
-        #matrixCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; }
+        /* Nền Canvas - Chắc chắn hiển thị */
+        #matrixCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-        .text-overlay { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 2; }
+        /* Overlay chứa chữ - Nằm trên Canvas */
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; }
         
-        /* Hiệu ứng chữ mượt mà */
-        .message { color: #fff; font-size: 4.5rem; font-weight: 900; text-shadow: 0 0 10px #fff, 0 0 20px #ff00de, 0 0 40px #ff00de; 
-                   opacity: 0; transition: all 1.2s ease-in-out; transform: translateY(30px); }
-        .message.active { opacity: 1; transform: translateY(0); }
+        .message { color: #fff; font-size: 3rem; font-weight: 900; opacity: 0; transition: all 1s ease; transform: translateY(20px); text-align: center; text-shadow: 0 0 10px #ff00de; }
+        .message.show { opacity: 1; transform: translateY(0); }
         
-        /* Trái tim RGB Neon */
-        .heart-neon { 
-            font-size: 8rem; display: block; filter: drop-shadow(0 0 15px #ff1493);
-            animation: rgbPulse 3s infinite linear, heartbeat 0.8s infinite; 
-        }
-        @keyframes rgbPulse { 0% { filter: hue-rotate(0deg) drop-shadow(0 0 15px #ff1493); } 100% { filter: hue-rotate(360deg) drop-shadow(0 0 15px #ff1493); } }
+        .heart-neon { font-size: 6rem; filter: drop-shadow(0 0 15px #ff1493); animation: heartbeat 0.8s infinite; margin-bottom: 20px; }
         @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
-        @media screen and (orientation: landscape) { #rotate-message { display: none; } #main-content { display: block; } }
+        /* Nút bắt đầu - Nằm trên cùng */
+        #start-btn { position: fixed; z-index: 100; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #ff69b4; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="rotate-message"><div>Xoay ngang màn hình để bắt đầu</div></div>
-    <div id="main-content">
-        <canvas id="matrixCanvas"></canvas>
-        <div class="text-overlay"><div id="text-display" class="message"></div></div>
+
+    <div id="start-btn">Chạm vào màn hình để bắt đầu...</div>
+    <canvas id="matrixCanvas"></canvas>
+    <div id="overlay">
+        <div id="text-display" class="message"></div>
     </div>
 
     <script>
-        // Matrix Background Chill
+        // 1. Vẽ Matrix
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth; 
+        canvas.height = window.innerHeight;
+        
         const letters = "LOVE❤️🌸✨";
-        const drops = Array(Math.floor(canvas.width/16)).fill(1);
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
         function draw() {
-            ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = "#ff1493"; ctx.font = "16px monospace";
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ff1493";
+            ctx.font = fontSize + "px monospace";
+            
             drops.forEach((y, i) => {
-                ctx.fillText(letters[Math.floor(Math.random()*letters.length)], i*16, y*16);
-                if(y*16 > canvas.height && Math.random() > 0.98) drops[i] = 0;
+                const text = letters[Math.floor(Math.random() * letters.length)];
+                ctx.fillText(text, i * fontSize, y * fontSize);
+                if (y * fontSize > canvas.height && Math.random() > 0.98) drops[i] = 0;
                 drops[i]++;
             });
             requestAnimationFrame(draw);
         }
         draw();
 
-        // Kịch bản lời thoại
-        const script = [
-            { text: "Chào cậu...", duration: 2000 },
-            { text: "Tớ có điều này", duration: 2000 },
-            { text: "muốn nói với cậu...", duration: 2000 },
-            { text: "Em đồng ý", duration: 2500 },
-            { text: "Làm người yêu", duration: 2500 },
-            { text: "Anh nhé?", duration: 2500 },
-            { text: "<div class='heart-neon'>❤️</div><span style='font-size:3rem'>Anh Yêu Em</span>", duration: 8000 }
-        ];
+        // 2. Logic thoại
+        const script = ["Chào cậu,", "Tớ có điều này", "muốn nói...", "Em đồng ý", "Làm người yêu", "Anh nhé?", "<div class='heart-neon'>❤️</div><span>Anh Yêu Em</span>"];
+        let idx = 0;
+        const display = document.getElementById('text-display');
 
-        const textDisplay = document.getElementById('text-display');
-        let i = 0;
         function run() {
-            if(i < script.length) {
-                textDisplay.innerHTML = script[i].text;
-                textDisplay.classList.add('active');
+            if(idx < script.length) {
+                display.innerHTML = script[idx];
+                display.classList.add('show');
                 setTimeout(() => {
-                    textDisplay.classList.remove('active');
-                    setTimeout(() => { i++; run(); }, 800); // Khoảng nghỉ giữa các câu
-                }, script[i].duration);
+                    display.classList.remove('show');
+                    setTimeout(() => { idx++; run(); }, 800);
+                }, 2500);
             }
         }
 
-        document.addEventListener('touchstart', function start() {
-            const audio = new Audio(MUSIC_LINK);
+        // 3. Sự kiện bắt đầu
+        document.getElementById('start-btn').onclick = function() {
+            this.style.display = 'none';
+            const audio = new Audio("https://raw.githubusercontent.com/khoaforknro/tinhto/refs/heads/main/audio_HIEUTHUHAI_download.mp3");
             audio.play();
-            document.getElementById('rotate-message').style.display = 'none';
             run();
-            document.removeEventListener('touchstart', start);
-        }, {once: true});
+        };
     </script>
 </body>
 </html>
