@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
 
     <script>
+        // Link nhạc trực tiếp đã được xác nhận
         const MUSIC_LINK = "https://raw.githubusercontent.com/khoaforknro/tinhto/refs/heads/main/audio_HIEUTHUHAI_download.mp3";
     </script>
 
@@ -14,6 +15,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Montserrat', sans-serif; }
 
+        /* Màn hình chờ xoay ngang */
         #rotate-message { position: fixed; inset: 0; background: #000; color: #ff69b4; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 999; text-align: center; padding: 20px; }
         .phone-icon { width: 50px; height: 80px; border: 3px solid #ff69b4; border-radius: 10px; margin-bottom: 20px; animation: rotatePhone 2s infinite ease-in-out; position: relative; }
         .phone-icon::after { content: ''; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); width: 8px; height: 8px; background: #ff69b4; border-radius: 50%; }
@@ -24,19 +26,21 @@
         
         .text-overlay { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 2; background: rgba(0, 0, 0, 0.2); }
         
+        /* Hiệu ứng chữ */
         .message { color: #fff; font-size: 5rem; font-weight: 900; text-shadow: 0 0 15px #ff1493, 0 0 30px #ff1493; 
                    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: scale(1); opacity: 0; text-align: center; max-width: 85%; }
         .message.active { opacity: 1; }
         .message.shatter { opacity: 0; transform: scale(1.6) rotate(10deg); filter: blur(8px); letter-spacing: 25px; }
         
-        /* Hiệu ứng trái tim đập cực chuẩn */
-        .heart-container { display: inline-block; animation: heartBeat 0.6s infinite cubic-bezier(0.215, 0.61, 0.355, 1); }
+        /* Trái tim Neon */
+        .heart-container { 
+            display: inline-block; 
+            filter: drop-shadow(0 0 10px #ff1493) drop-shadow(0 0 20px #ff1493);
+            animation: heartBeat 0.8s infinite cubic-bezier(0.215, 0.61, 0.355, 1); 
+        }
         @keyframes heartBeat {
-            0% { transform: scale(1); }
-            15% { transform: scale(1.3); }
-            30% { transform: scale(1); }
-            45% { transform: scale(1.15); }
-            60% { transform: scale(1); }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
         }
 
         @media screen and (orientation: landscape) { #rotate-message { display: none; } #main-content { display: block; } }
@@ -64,11 +68,8 @@
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
         const audio = document.getElementById('bgMusic');
-        const audioSource = document.getElementById('audioSource');
+        audio.src = MUSIC_LINK;
         
-        audioSource.src = MUSIC_LINK;
-        audio.load();
-
         function initCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         initCanvas();
         window.addEventListener('resize', initCanvas);
@@ -77,8 +78,13 @@
         const fontSize = 16;
         let columns = Math.floor(window.innerWidth / fontSize);
         let drops = Array(columns).fill(1);
+        let frameCount = 0;
 
+        // Vẽ Matrix chậm và mượt
         function drawMatrix() {
+            frameCount++;
+            if (frameCount % 2 !== 0) { requestAnimationFrame(drawMatrix); return; }
+
             ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.font = "bold " + fontSize + "px monospace";
@@ -93,6 +99,7 @@
         }
         requestAnimationFrame(drawMatrix);
 
+        // Nội dung lời thoại
         const script = [
             { text: "3", duration: 1500 },
             { text: "2", duration: 1500 },
@@ -100,7 +107,7 @@
             { text: "Em đồng ý...", duration: 3000 },
             { text: "Làm người yêu", duration: 3000 },
             { text: "Anh nhé?", duration: 3000 },
-            { text: "<div class='heart-container'>❤️</div><span style='font-size: 3.8rem; display:block; font-weight:900; margin-top:10px;'>Anh Yêu Em</span>", duration: 15000 }
+            { text: "<div class='heart-container'>❤️</div><span style='font-size: 3.8rem; display:block; font-weight:900; margin-top:10px; text-shadow: 0 0 15px #ff1493;'>Anh Yêu Em</span>", duration: 7000 }
         ];
 
         const textDisplay = document.getElementById('text-display');
@@ -122,18 +129,18 @@
             }
         }
 
-        function startExperience() {
+        // Bắt đầu trải nghiệm
+        function start() {
             if (!started && window.innerWidth > window.innerHeight) {
                 started = true;
                 audio.play().catch(e => console.log("Cần tương tác người dùng"));
                 runScript();
-                document.removeEventListener('click', startExperience);
-                document.removeEventListener('touchstart', startExperience);
+                document.removeEventListener('click', start);
+                document.removeEventListener('touchstart', start);
             }
         }
-
-        document.addEventListener('click', startExperience);
-        document.addEventListener('touchstart', startExperience);
+        document.addEventListener('click', start);
+        document.addEventListener('touchstart', start);
     </script>
 </body>
 </html>
